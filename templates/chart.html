@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart Result</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: url('{{ url_for('static', filename='ultra_gradient.png') }}') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .navbar, .footer {
+            backdrop-filter: blur(10px);
+            background: rgba(245, 245, 245, 0.55);
+        }
+        @keyframes fade-in {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+        .insight-card {
+            border-left: 4px solid #3b82f6;
+            background-color: white;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            const chartContainer = document.getElementById("chart-container");
+            const loading = document.getElementById("loading");
+
+            setTimeout(() => {
+                loading.style.display = "none";
+                chartContainer.style.display = "block";
+            }, 1000);
+
+            // Process insights to split them into separate boxes
+            if (document.getElementById('insights-content')) {
+                const insightsContent = document.getElementById('insights-content').textContent;
+                const insightsContainer = document.getElementById('insights-container');
+                
+                // Clear existing content
+                insightsContainer.innerHTML = '';
+                
+                // Look for peak header
+                const peakMatch = insightsContent.match(/\*\*Peak in ([^*]+)\*\*/);
+                const peakHeader = peakMatch ? peakMatch[0] : '';
+                
+                // Split by numbered points (1., 2., 3.)
+                const points = insightsContent.split(/(?=\d+\.\s)/g);
+                
+                // If we have a peak header, add it to the first box
+                if (peakHeader && points.length > 0) {
+                    // Add peak header to first box
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'insight-card mb-2';
+                    headerDiv.innerHTML = `<div class="text-sm font-bold">${peakHeader}</div>`;
+                    insightsContainer.appendChild(headerDiv);
+                }
+                
+                // Add each numbered point to its own box
+                points.forEach(point => {
+                    if (point.trim() && /^\d+\./.test(point.trim())) {
+                        const pointDiv = document.createElement('div');
+                        pointDiv.className = 'insight-card mb-2';
+                        pointDiv.innerHTML = `<div class="text-sm">${point.trim()}</div>`;
+                        insightsContainer.appendChild(pointDiv);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body class="min-h-screen flex flex-col font-sans text-gray-800">
+    <header class="navbar flex items-center justify-between px-6 py-4 shadow-md">
+        <div class="flex items-center gap-2">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="h-10">
+            <span class="text-xl font-bold text-blue-700">WebInsider</span>
+        </div>
+        <nav class="hidden md:flex gap-6 text-gray-700 text-sm font-medium">
+            <a href="#" class="hover:text-blue-600">Home</a>
+            <a href="#" class="hover:text-blue-600">Become an Insider</a>
+        </nav>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="w-full max-w-7xl bg-white/60 backdrop-blur-md p-6 rounded-2xl shadow-xl animate-fade-in flex flex-col lg:flex-row gap-6">
+            <div class="w-full lg:w-2/3">
+                <div id="loading">
+                    <div class="animate-spin mx-auto w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full"></div>
+                    <p class="mt-4 text-blue-700 text-lg font-semibold">Generating your chart...</p>
+                </div>
+
+                <div id="chart-container" style="display:none;">
+                    <h1 class="text-2xl font-bold mb-4 text-blue-900">📊 Chart Result for "{{ term }}"</h1>
+                    
+                    {% if month_chart_url %}
+                        <div>
+                            <h2 class="text-xl font-semibold mb-2 text-blue-800">Monthly Trends</h2>
+                            <img src="data:image/png;base64,{{ month_chart_url }}" alt="Month Chart" class="w-full max-w-3xl mx-auto rounded-xl shadow-md">
+                        </div>
+                    {% elif year_chart_url %}
+                        <div>
+                            <h2 class="text-xl font-semibold mb-2 text-blue-800">Yearly Trends</h2>
+                            <img src="data:image/png;base64,{{ year_chart_url }}" alt="Year Chart" class="w-full max-w-3xl mx-auto rounded-xl shadow-md">
+                        </div>
+                    {% else %}
+                        <p class="text-red-500">⚠️ Error generating chart: {{ error }}</p>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('index') }}" class="inline-block mt-4 text-blue-600 hover:underline text-sm">🔙 Go Back</a>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-1/3 text-left text-gray-700">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xl font-bold text-blue-900">Insights for "{{ term }}"</h2>
+                    {% if ai_powered %}
+                        <span class="ai-badge flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            AI Powered
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <p class="text-sm text-gray-500 mb-2">Found {{ total_results }} mentions in the archive.</p>
+                
+                <!-- Hide original insights but keep for processing -->
+                <div id="insights-content" style="display: none;">
+                    {% for insight in insights %}
+                        {{ insight | safe }}
+                    {% endfor %}
+                </div>
+                
+                <!-- Container for separated insight boxes -->
+                <div id="insights-container" class="space-y-2">
+                    {% for insight in insights %}
+                        <div class="insight-card">
+                            <div class="text-sm">{{ insight | safe }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-right mt-2">
+                    <span class="text-xs text-gray-400 italic">
+                        {% if ai_powered %}
+                            Analysis based on archive snapshots
+                        {% else %}
+                            Based on statistical analysis
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer text-center py-3 text-gray-500 text-xs">
+        &copy; 2025 WebInsider — All rights reserved
+    </footer>
+</body>
+</html>

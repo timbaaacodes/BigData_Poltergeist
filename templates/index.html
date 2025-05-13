@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebInsider Chart Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    @keyframes fade-in {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+    }
+        
+    body {
+        background: url('{{ url_for('static', filename='ultra_gradient.png') }}') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center font-sans text-gray-800">
+    <div class="bg-white/60 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full max-w-xl text-center animate-fade-in">
+        <div class="flex justify-center mb-6">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="WebInsider Logo" class="h-14">
+        </div>
+        <h1 class="text-3xl font-extrabold text-blue-800 mb-4">Welcome to WebInsider</h1>
+        <p class="mb-6 text-gray-600">Generate elegant, insightful charts from your search terms. It's fast, beautiful, and easy to use.</p>
+        <form method="POST" class="space-y-4" onsubmit="showLoading()">
+            <input 
+                type="text" 
+                name="searchterm" 
+                placeholder="Choose your search term" 
+                class="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+                required
+            >
+            <button 
+                type="submit" 
+                class="w-full bg-blue-600 text-white p-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition"
+            >
+                Generate Chart
+            </button>
+        </form>
+        {% if error %}
+        <p class="text-red-500 mt-4 text-sm">⚠️ {{ error }}</p>
+        {% endif %}
+        <div id="loading" class="hidden mt-6 text-center">
+            <div class="animate-spin mx-auto w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full"></div>
+            <p class="mt-2 text-blue-600 font-medium">Getting your data...</p>
+        </div>
+    </div>
+    <script>
+        function showLoading() {
+            document.getElementById("loading").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
